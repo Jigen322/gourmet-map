@@ -1,45 +1,68 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import SpotCard from '@/components/SpotCard'
+import { useMemo } from 'react'
+import Link from 'next/link'
 import { isInSeasonNow } from '@/lib/season'
 
-const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
+const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
 
-function getMonthCells(year, month) {
-  const firstDay = new Date(year, month, 1)
-  const lastDate = new Date(year, month + 1, 0).getDate()
-  const cells = []
-  for (let i = 0; i < firstDay.getDay(); i++) cells.push(null)
-  for (let d = 1; d <= lastDate; d++) cells.push(d)
-  return cells
+const SEASON_MONTHS = {
+  '春': [2, 3, 4],   // 3〜5月(0始まり)
+  '夏': [5, 6, 7],
+  '秋': [8, 9, 10],
+  '冬': [11, 0, 1],
 }
 
-function MiniMonth({ year, month, today, dayMap }) {
-  const cells = getMonthCells(year, month)
-  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth()
+// 投稿ごとに「旬の範囲」を月単位(0〜11)の配列で返す
+function getSeasonMonths(spot) {
+  const active = new Set()
+
+  if ((spot.seasons || []).includes('通年')) {
+    for (let i = 0; i < 12; i++) active.add(i)
+    return active
+  }
+
+  for (const s of (spot.seasons || [])) {
+    for (const m of (SEASON_MONTHS[s] || [])) active.add(m)
+  }
+
+  if (spot.season_month != null) {
+    active.add(spot.season_month - 1) // DBは1始まり
+  }
+
+  if (spot.season_date) {
+    const d = new Date(spot.season_date)
+    active.add(d.getMonth())
+  }
+
+  return active
+}
+
+function SeasonBar({ spot }) {
+  const activeMonths = getSeasonMonths(spot)
 
   return (
-    <div className="mini-month">
-      <h4 className="mini-month-title">{month + 1}月</h4>
-      <div className="mini-month-grid">
-        {WEEKDAYS.map((w) => (
-          <span key={w} className="mini-weekday">{w}</span>
+    <div className="season-bar-row">
+      {/* 左側: 投稿情報 */}
+      <Link href={`/spots/${spot.id}`} className="season-bar-label">
+        {spot.image_url && (
+          <img src={spot.image_url} alt={spot.title} className="season-bar-thumb" />
+        )}
+        <div className="season-bar-info">
+          <span className="season-bar-title">{spot.title}</span>
+          <span className="season-bar-area">{spot.area}</span>
+        </div>
+      </Link>
+
+      {/* 右側: 月ごとのバー */}
+      <div className="season-bar-months">
+        {Array.from({ length: 12 }, (_, i) => (
+          <div
+            key={i}
+            className={`season-bar-cell ${activeMonths.has(i) ? 'active' : ''}`}
+            title={activeMonths.has(i) ? `${i + 1}月が旬` : undefined}
+          />
         ))}
-        {cells.map((d, i) => {
-          const matches = d ? dayMap[d] : null
-          const isToday = d && isCurrentMonth && d === today.getDate()
-          return (
-            <span
-              key={i}
-              className={`mini-day ${isToday ? 'today' : ''} ${matches ? 'has-spot' : ''}`}
-              title={matches ? matches.map((s) => s.title).join('、') : undefined}
-            >
-              {d || ''}
-              {matches && <span className="mini-dot" />}
-            </span>
-          )
-        })}
       </div>
     </div>
   )
@@ -47,60 +70,76 @@ function MiniMonth({ year, month, today, dayMap }) {
 
 export default function CalendarView({ spots }) {
   const today = new Date()
-  const [year, setYear] = useState(today.getFullYear())
+  const currentMonth = today.getMonth()
 
   const inSeasonNow = useMemo(() => spots.filter((s) => isInSeasonNow(s, today)), [spots]) // eslint-disable-line
 
-  // 月日(年をまたいで毎年繰り返すものとして)ごとに投稿をまとめる
-  const dayMapByMonth = useMemo(() => {
-    const map = {}
-    spots.forEach((s) => {
-      if (!s.season_date) return
-      const d = new Date(s.season_date)
-      const m = d.getMonth()
-      const day = d.getDate()
-      map[m] = map[m] || {}
-      map[m][day] = map[m][day] || []
-      map[m][day].push(s)
-    })
-    return map
-  }, [spots])
+  // 旬情報が少しでもある投稿だけ表示(通年含む)
+  const spotsWithSeason = useMemo(() =>
+    spots.filter((s) =>
+      (s.seasons && s.seasons.length > 0) ||
+      s.season_month != null ||
+      s.season_date != null
+    ), [spots])
 
   return (
     <div>
+      {/* 今が旬 */}
       <h3 style={{ marginBottom: 4 }}>🍴 今が旬の投稿</h3>
       <p className="field-hint">{today.getMonth() + 1}月{today.getDate()}日時点で旬の投稿です</p>
 
       {inSeasonNow.length > 0 ? (
         <div className="spots-grid" style={{ marginBottom: 48 }}>
           {inSeasonNow.map((spot) => (
-            <SpotCard key={spot.id} spot={spot} />
+            <Link key={spot.id} href={`/spots/${spot.id}`} className="spot-card" style={{ display: 'block', color: 'inherit' }}>
+              {spot.image_url && <img src={spot.image_url} alt={spot.title} className="spot-card-image" />}
+              <span className="hanko-stamp">{spot.area}</span>
+              <div className="spot-card-body">
+                <h3>{spot.title}</h3>
+                {spot.shop_name && <p className="spot-card-shop">{spot.shop_name}</p>}
+              </div>
+            </Link>
           ))}
         </div>
       ) : (
-        <div className="empty-state" style={{ padding: '20px 0 48px' }}>今が旬の投稿はまだありません</div>
+        <div className="empty-state" style={{ padding: '20px 0 32px' }}>今が旬の投稿はまだありません</div>
       )}
 
-      <div className="calendar-header">
-        <button type="button" className="btn btn-ghost cal-nav" onClick={() => setYear(year - 1)}>← {year - 1}年</button>
-        <h3>{year}年 まるごとカレンダー</h3>
-        <button type="button" className="btn btn-ghost cal-nav" onClick={() => setYear(year + 1)}>{year + 1}年 →</button>
-      </div>
+      {/* 年間旬カレンダー */}
+      <h3 style={{ marginBottom: 16 }}>📅 年間 旬カレンダー</h3>
 
-      <div className="year-grid">
-        {Array.from({ length: 12 }, (_, i) => i).map((month) => (
-          <MiniMonth
-            key={month}
-            year={year}
-            month={month}
-            today={today}
-            dayMap={dayMapByMonth[month] || {}}
-          />
-        ))}
-      </div>
+      {spotsWithSeason.length === 0 ? (
+        <div className="empty-state">旬の情報が登録された投稿がまだありません</div>
+      ) : (
+        <div className="season-calendar">
+          {/* ヘッダー行(月ラベル) */}
+          <div className="season-bar-row season-header-row">
+            <div className="season-bar-label season-header-label" />
+            <div className="season-bar-months">
+              {MONTHS.map((m, i) => (
+                <div key={i} className={`season-month-label ${i === currentMonth ? 'current' : ''}`}>
+                  {m}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 現在月の縦線(今日の位置を示す) */}
+          <div className="season-rows-wrapper">
+            {/* 今月の位置にハイライト */}
+            <div
+              className="current-month-line"
+              style={{ left: `calc(${(currentMonth / 12) * 100}% + ${(1 / 12) * 50}%)` }}
+            />
+            {spotsWithSeason.map((spot) => (
+              <SeasonBar key={spot.id} spot={spot} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <p className="field-hint" style={{ marginTop: 12 }}>
-        ※ 点(●)が付いている日は、「旬の日付」をピンポイント指定した投稿があります(マウスを乗せるとタイトルが見られます)。月単位・季節単位で指定した投稿は上の「今が旬の投稿」に表示されます。
+        ※ 旬の情報(季節・月・日付)が登録されている投稿のみ表示されます。青いバーが旬の時期です。現在の月は橙色でハイライトされています。
       </p>
     </div>
   )
