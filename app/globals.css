@@ -1,0 +1,490 @@
+:root {
+  /* ===== デザイントークン ===== */
+  --color-night: #1b2a4a;     /* 藍色(夜の屋台) - ヘッダー/見出し背景 */
+  --color-night-deep: #11192e;
+  --color-paper: #faf6ef;     /* 旅手帖の紙色 - カード背景 */
+  --color-paper-dim: #f0e9da;
+  --color-ink: #22282e;       /* 本文の文字色 */
+  --color-ink-soft: #5a6068;
+  --color-lantern: #e8a33d;   /* 提灯のあかり - メインアクション */
+  --color-lantern-deep: #c97f1f;
+  --color-matcha: #5b6f4e;    /* 抹茶色 - 編集/管理ランクの印 */
+  --color-hanko: #b23a2e;     /* 朱色のはんこ - 地域スタンプ */
+
+  --font-display: 'Shippori Mincho', serif;
+  --font-body: 'Zen Kaku Gothic New', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+/* キーボード操作時のフォーカスを必ず見えるようにする */
+:focus-visible {
+  outline: 3px solid var(--color-lantern);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ===== レイアウト共通 ===== */
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ===== ヘッダー(夜の屋台の暖簾風) ===== */
+.site-header {
+  background: linear-gradient(180deg, var(--color-night) 0%, var(--color-night-deep) 100%);
+  color: var(--color-paper);
+  padding: 20px 0;
+  border-bottom: 4px solid var(--color-lantern);
+}
+
+.site-header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.site-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.site-title small {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--color-lantern);
+  letter-spacing: 0.15em;
+  margin-top: 2px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+/* ===== ボタン ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--color-lantern);
+  color: var(--color-night-deep);
+}
+
+.btn-primary:hover {
+  background: var(--color-lantern-deep);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--color-paper);
+  color: var(--color-paper);
+}
+
+.btn-danger {
+  background: transparent;
+  border: 1px solid var(--color-hanko);
+  color: var(--color-hanko);
+}
+
+/* ===== カード(投稿1件) - 旅手帖のスタンプカード風 ===== */
+.spot-card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-paper-dim);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(27, 42, 74, 0.08);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.spot-card:hover {
+  box-shadow: 0 6px 16px rgba(27, 42, 74, 0.15);
+  transform: translateY(-2px);
+}
+
+.spot-card-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  background: var(--color-paper-dim);
+}
+
+.spot-card-body {
+  padding: 16px;
+}
+
+.spot-card-body h3 {
+  font-size: 1.15rem;
+  margin-bottom: 4px;
+}
+
+.spot-card-shop {
+  color: var(--color-ink-soft);
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+/* ===== 地域スタンプ(はんこ風バッジ) ===== */
+.hanko-stamp {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--color-hanko);
+  border-radius: 50%;
+  color: var(--color-hanko);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  transform: rotate(-8deg);
+  background: rgba(250, 246, 239, 0.9);
+  padding: 4px;
+}
+
+/* ===== ランクバッジ ===== */
+.role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid currentColor;
+}
+
+.role-viewer { color: var(--color-ink-soft); }
+.role-poster { color: var(--color-lantern-deep); }
+.role-editor { color: var(--color-matcha); }
+.role-admin { color: var(--color-hanko); }
+
+/* ===== フォーム ===== */
+.form-field {
+  margin-bottom: 16px;
+}
+
+.form-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-paper-dim);
+  border-radius: 4px;
+  background: white;
+}
+
+.error-text {
+  color: var(--color-hanko);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+/* ===== 複数選択チェックボックス群 ===== */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checkbox-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--color-paper-dim);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  background: white;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.checkbox-chip input {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-chip.checked {
+  background: var(--color-lantern);
+  border-color: var(--color-lantern-deep);
+  color: var(--color-night-deep);
+  font-weight: 600;
+}
+
+.period-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.period-row select {
+  flex: 1;
+  min-width: 100px;
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+  margin-top: -2px;
+  margin-bottom: 8px;
+}
+
+.tag-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* ===== 表示モードタブ ===== */
+.view-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--color-paper-dim);
+  margin-top: 24px;
+}
+
+.view-tab {
+  padding: 10px 22px;
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.view-tab.active {
+  color: var(--color-night);
+  border-bottom-color: var(--color-lantern);
+}
+
+/* ===== 一覧の絞り込みバー ===== */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.filter-bar select {
+  padding: 8px 12px;
+  border: 1px solid var(--color-paper-dim);
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9rem;
+}
+
+/* ===== 地図 ===== */
+.map-frame {
+  height: 70vh;
+  min-height: 360px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-paper-dim);
+}
+
+.map-pin-photo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid var(--color-hanko);
+  background-color: var(--color-paper-dim);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.map-pin-arrow {
+  width: 0;
+  height: 0;
+  margin: -2px auto 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid var(--color-hanko);
+}
+
+.user-pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-lantern);
+  border: 3px solid white;
+  box-shadow: 0 0 0 4px rgba(232, 163, 61, 0.35);
+}
+
+/* ===== カレンダー(年間表示) ===== */
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 32px 0 16px;
+}
+
+.cal-nav {
+  color: var(--color-ink);
+  border-color: var(--color-paper-dim);
+  padding: 6px 14px;
+}
+
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .year-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .year-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mini-month {
+  background: white;
+  border: 1px solid var(--color-paper-dim);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.mini-month-title {
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+  text-align: center;
+  color: var(--color-night);
+}
+
+.mini-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.mini-weekday {
+  font-size: 0.6rem;
+  text-align: center;
+  color: var(--color-ink-soft);
+}
+
+.mini-day {
+  position: relative;
+  font-size: 0.68rem;
+  text-align: center;
+  padding: 3px 0;
+  color: var(--color-ink-soft);
+  border-radius: 3px;
+}
+
+.mini-day.today {
+  background: #fff8ec;
+  border: 1px solid var(--color-lantern);
+  font-weight: 700;
+  color: var(--color-night);
+}
+
+.mini-day.has-spot {
+  font-weight: 700;
+  color: var(--color-hanko);
+}
+
+.mini-dot {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-hanko);
+}
+
+.spots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  padding: 32px 0 60px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-ink-soft);
+}
