@@ -34,7 +34,7 @@ export default function ViewSwitcher({ spots }) {
         ))}
       </div>
 
-      <div style={{ paddingTop: 20, paddingBottom: 60 }}>
+      <div style={view === 'map' ? {} : { paddingTop: 20, paddingBottom: 60 }}>
         {view === 'list' && <ListView spots={spots} />}
         {view === 'map' && <MapView spots={spots} />}
         {view === 'calendar' && <CalendarView spots={spots} />}
