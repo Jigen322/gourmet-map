@@ -728,6 +728,128 @@ textarea {
   padding: 6px 14px;
 }
 
+/* ===== コレクションカード ===== */
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  margin-bottom: 48px;
+}
+
+.collection-card {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  min-height: 160px;
+  box-shadow: 0 2px 8px rgba(27,42,74,0.12);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.collection-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(27,42,74,0.18);
+}
+
+.collection-card-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--color-night);
+  background-size: cover;
+  background-position: center;
+}
+
+.collection-card-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(17,25,46,0.2) 0%, rgba(17,25,46,0.75) 100%);
+}
+
+.collection-card-body {
+  position: relative;
+  z-index: 1;
+  padding: 20px 16px 16px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  min-height: 160px;
+  justify-content: flex-end;
+}
+
+.collection-card-type {
+  font-size: 0.72rem;
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 999px;
+  padding: 2px 8px;
+  align-self: flex-start;
+  margin-bottom: 4px;
+}
+
+.collection-card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.collection-card-desc {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.8);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.collection-card-count {
+  font-size: 0.78rem;
+  color: var(--color-lantern);
+  font-weight: 600;
+}
+
+/* コレクション詳細ヒーロー */
+.collection-hero {
+  margin: 24px -20px 0;
+  min-height: 200px;
+  background: var(--color-night);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.collection-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(17,25,46,0.3) 0%, rgba(17,25,46,0.8) 100%);
+}
+
+.collection-hero-inner {
+  position: relative;
+  z-index: 1;
+  color: white;
+  padding: 28px 20px 24px;
+}
+
+/* お店件数バッジ */
+.shop-count-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: var(--color-night);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-lantern);
+}
+
 .spots-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
