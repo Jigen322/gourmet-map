@@ -1,27 +1,35 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import CheckboxGroup from '@/components/CheckboxGroup'
 import { geocodeAddress } from '@/lib/geocode'
-import { PREFECTURE_OPTIONS } from '@/lib/constants'
+import {
+  CATEGORY_OPTIONS, SPOT_TYPE_OPTIONS_AS_CATEGORY,
+  SEASON_OPTIONS, DECADE_OPTIONS, MONTH_OPTIONS, PREFECTURE_OPTIONS
+} from '@/lib/constants'
 
 export default function NewSpotPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const supabase = createClient()
-
-  const [dishes, setDishes] = useState([])
-  const [dishId, setDishId] = useState(searchParams.get('dish_id') || '')
-  const [form, setForm] = useState({ shop_name: '', area: '', address: '', description: '' })
+  const [form, setForm] = useState({
+    title: '',        // 料理名
+    comment: '',      // 一言コメント
+    shop_name: '',
+    area: '',
+    sub_area: '',
+    address: '',
+    description: '',
+  })
+  const [categories, setCategories] = useState([])
+  const [seasons, setSeasons] = useState([])
+  const [seasonMonth, setSeasonMonth] = useState('')
+  const [seasonDecade, setSeasonDecade] = useState('')
+  const [seasonDate, setSeasonDate] = useState('')
   const [file, setFile] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    supabase.from('dishes').select('id, name').order('name').then(({ data }) => setDishes(data || []))
-  }, [])
 
   function update(key, value) { setForm((f) => ({ ...f, [key]: value })) }
 
@@ -44,68 +52,101 @@ export default function NewSpotPage() {
 
     const geo = await geocodeAddress(form.address)
 
-    // titleは料理名から自動設定
-    const selectedDish = dishes.find((d) => d.id === dishId)
-
     const { error: insertError } = await supabase.from('gourmet_spots').insert({
-      title: selectedDish ? selectedDish.name : form.shop_name,
-      dish_id: dishId || null,
+      title: form.title,
+      comment: form.comment || null,
       shop_name: form.shop_name,
       area: form.area,
+      sub_area: form.sub_area || null,
       address: form.address,
       description: form.description,
+      categories,
+      seasons,
+      season_month: seasonMonth ? Number(seasonMonth) : null,
+      season_decade: seasonDecade || null,
+      season_date: seasonDate || null,
       image_url,
       latitude: geo?.latitude ?? null,
       longitude: geo?.longitude ?? null,
       created_by: user.id,
-      // 旬・ジャンル情報は料理マスター側に持つため、ここでは空
-      categories: [],
-      seasons: [],
     })
 
     setLoading(false)
     if (insertError) { setError('投稿に失敗しました: ' + insertError.message); return }
-
-    if (dishId) {
-      router.push(`/dishes/${dishId}`)
-    } else {
-      router.push('/')
-    }
+    router.push('/')
     router.refresh()
   }
 
   return (
-    <div className="container" style={{ maxWidth: 560, paddingTop: 40, paddingBottom: 60 }}>
-      <h2 style={{ marginBottom: 8 }}>お店を投稿する</h2>
-      <p className="field-hint">
-        まず料理を選んでから、そのお店の情報を入力してください。
-        料理がまだ登録されていない場合は先に
-        <Link href="/dishes/new" style={{ color: 'var(--color-lantern-deep)', fontWeight: 600 }}> 料理を登録 </Link>
-        してください。
-      </p>
-
+    <div className="container" style={{ maxWidth: 600, paddingTop: 40, paddingBottom: 60 }}>
+      <h2 style={{ marginBottom: 24 }}>お店・料理を投稿する</h2>
       <form onSubmit={handleSubmit}>
+
         <div className="form-field">
-          <label htmlFor="dish">料理を選ぶ *</label>
-          <select
-            id="dish"
-            required
-            value={dishId}
-            onChange={(e) => setDishId(e.target.value)}
-          >
-            <option value="">料理を選択してください</option>
-            {dishes.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-          <p className="field-hint">
-            <Link href="/dishes/new" style={{ color: 'var(--color-lantern-deep)' }}>+ 新しい料理を登録する</Link>
-          </p>
+          <label htmlFor="comment">一言コメント(おすすめポイントなど)</label>
+          <input
+            id="comment"
+            value={form.comment}
+            onChange={(e) => update('comment', e.target.value)}
+            placeholder="例: ここでしか食べられない絶品の一品！"
+          />
         </div>
 
         <div className="form-field">
-          <label htmlFor="shop_name">お店の名前 *</label>
-          <input id="shop_name" required value={form.shop_name} onChange={(e) => update('shop_name', e.target.value)} placeholder="例: あきちゃん" />
+          <label htmlFor="title">料理名 *(同じ料理はまとめて表示されます)</label>
+          <input
+            id="title"
+            required
+            value={form.title}
+            onChange={(e) => update('title', e.target.value)}
+            placeholder="例: ホルモン天ぷら"
+          />
+        </div>
+
+        <div className="form-field">
+          <label>ジャンル(複数選択可)</label>
+          <CheckboxGroup
+            options={CATEGORY_OPTIONS}
+            value={categories}
+            onChange={setCategories}
+          />
+          <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--color-paper-dim)' }}>
+            <p className="field-hint" style={{ marginBottom: 6 }}>種別</p>
+            <CheckboxGroup
+              options={SPOT_TYPE_OPTIONS_AS_CATEGORY}
+              value={categories}
+              onChange={setCategories}
+            />
+          </div>
+        </div>
+
+        <div className="form-field">
+          <label>旬の季節(複数選択可)</label>
+          <CheckboxGroup options={SEASON_OPTIONS} value={seasons} onChange={setSeasons} />
+        </div>
+
+        <div className="form-field">
+          <label>旬の時期(月+上旬/中旬/下旬)</label>
+          <div className="period-row">
+            <select value={seasonMonth} onChange={(e) => setSeasonMonth(e.target.value)}>
+              <option value="">月を選択</option>
+              {MONTH_OPTIONS.map((m) => <option key={m} value={m}>{m}月</option>)}
+            </select>
+            <select value={seasonDecade} onChange={(e) => setSeasonDecade(e.target.value)}>
+              <option value="">時期を選択</option>
+              {DECADE_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="seasonDate">旬の日付(ピンポイントで指定したい場合)</label>
+          <input id="seasonDate" type="date" value={seasonDate} onChange={(e) => setSeasonDate(e.target.value)} />
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="shop_name">お店の名前</label>
+          <input id="shop_name" value={form.shop_name} onChange={(e) => update('shop_name', e.target.value)} placeholder="例: あきちゃん" />
         </div>
 
         <div className="form-field">
@@ -117,12 +158,22 @@ export default function NewSpotPage() {
         </div>
 
         <div className="form-field">
+          <label htmlFor="sub_area">市区町村・地域(任意)</label>
+          <input
+            id="sub_area"
+            value={form.sub_area}
+            onChange={(e) => update('sub_area', e.target.value)}
+            placeholder="例: 広島市中区、下北沢周辺"
+          />
+        </div>
+
+        <div className="form-field">
           <label htmlFor="address">住所(地図表示に使います)</label>
           <input id="address" value={form.address} onChange={(e) => update('address', e.target.value)} placeholder="例: 広島県広島市中区○○町1-2-3" />
         </div>
 
         <div className="form-field">
-          <label htmlFor="description">このお店のこだわり・メモ</label>
+          <label htmlFor="description">詳しい説明・メモ</label>
           <textarea id="description" rows={3} value={form.description} onChange={(e) => update('description', e.target.value)} />
         </div>
 

@@ -37,10 +37,7 @@ export default async function Header() {
 
         <nav className="nav-links">
           {canPost && (
-            <>
-              <Link href="/dishes/new" className="btn btn-ghost">料理を登録</Link>
-              <Link href="/spots/new" className="btn btn-primary">お店を投稿</Link>
-            </>
+            <Link href="/spots/new" className="btn btn-primary">お店を投稿</Link>
           )}
 
           {profile?.role === 'admin' && (

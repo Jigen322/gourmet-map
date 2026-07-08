@@ -27,26 +27,29 @@ export default async function SpotDetailPage({ params }) {
 
   const { data: { user } } = await supabase.auth.getUser()
   let canEdit = false
-  let canDeleteAny = false
 
   if (user) {
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
+      .from('profiles').select('role').eq('id', user.id).single()
     const role = profile?.role
-    canDeleteAny = role === 'editor' || role === 'admin'
-    canEdit = canDeleteAny || (role === 'poster' && spot.created_by === user.id)
+    canEdit = ['editor', 'admin'].includes(role) ||
+      (role === 'poster' && spot.created_by === user.id)
   }
 
   const period = formatPeriod(spot)
 
   return (
     <div className="container" style={{ maxWidth: 680, paddingTop: 40, paddingBottom: 60 }}>
-      <Link href="/" style={{ color: 'var(--color-ink-soft)', fontSize: '0.9rem' }}>← 一覧に戻る</Link>
+      {/* パンくず */}
+      <div style={{ fontSize: '0.85rem', color: 'var(--color-ink-soft)' }}>
+        <Link href="/">トップ</Link>
+        {spot.title && (
+          <> › <Link href={`/dishes/${encodeURIComponent(spot.title)}`}>{spot.title}</Link></>
+        )}
+        {spot.shop_name && <> › {spot.shop_name}</>}
+      </div>
 
+      {/* 画像 */}
       <div style={{ position: 'relative', marginTop: 16 }}>
         {spot.image_url && (
           <img src={spot.image_url} alt={spot.title} style={{ width: '100%', borderRadius: 8, aspectRatio: '16/9', objectFit: 'cover' }} />
@@ -54,17 +57,27 @@ export default async function SpotDetailPage({ params }) {
         <span className="hanko-stamp">{spot.area}</span>
       </div>
 
-      {spot.spot_type && (
-        <span className="role-badge role-editor" style={{ marginTop: 16, display: 'inline-block' }}>
-          {spot.spot_type}
-        </span>
+      {/* 一言コメント */}
+      {spot.comment && (
+        <p style={{ marginTop: 16, fontStyle: 'italic', color: 'var(--color-ink-soft)', fontSize: '1rem' }}>
+          "{spot.comment}"
+        </p>
       )}
 
       <h1 style={{ fontSize: '1.8rem', marginTop: 12 }}>{spot.title}</h1>
-      {spot.shop_name && <p style={{ color: 'var(--color-ink-soft)', marginTop: 4 }}>{spot.shop_name}</p>}
-      {spot.address && <p style={{ color: 'var(--color-ink-soft)', fontSize: '0.9rem' }}>{spot.address}</p>}
+      {spot.shop_name && <p style={{ color: 'var(--color-ink-soft)', marginTop: 4, fontSize: '1rem' }}>{spot.shop_name}</p>}
 
-      <div className="tag-badges">
+      {/* エリア */}
+      <p style={{ color: 'var(--color-ink-soft)', fontSize: '0.9rem', marginTop: 4 }}>
+        {spot.area}{spot.sub_area ? ` › ${spot.sub_area}` : ''}
+      </p>
+
+      {spot.address && (
+        <p style={{ color: 'var(--color-ink-soft)', fontSize: '0.85rem' }}>{spot.address}</p>
+      )}
+
+      {/* タグ */}
+      <div className="tag-badges" style={{ marginTop: 12 }}>
         {(spot.categories || []).map((c) => (
           <span key={c} className="role-badge role-poster">{c}</span>
         ))}
@@ -74,7 +87,9 @@ export default async function SpotDetailPage({ params }) {
         {period && <span className="role-badge role-admin">旬: {period}</span>}
       </div>
 
-      <p style={{ lineHeight: 1.8, marginTop: 20, whiteSpace: 'pre-wrap' }}>{spot.description}</p>
+      {spot.description && (
+        <p style={{ lineHeight: 1.8, marginTop: 20, whiteSpace: 'pre-wrap' }}>{spot.description}</p>
+      )}
 
       {canEdit && (
         <div style={{ marginTop: 32, display: 'flex', gap: 12 }}>
